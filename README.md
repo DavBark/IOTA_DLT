@@ -17,4 +17,6 @@ o  lokalen Kühlhaus im Güterverteilzentrum (GVZ)
 o  Ein Kühltransporter (KT) bringt die Ware in ein  
 o  Güterverteilzentrum (GVZ) in der Nähe des Endkunden 
 o  Ein Kühltransporter (KT) bringt die Ware zum Endkunden.  
-  Der Endkunde kann die Einhaltung der Kühlkette überprüfen, indem er den QR-Code einscannt.
+
+## Weitere Infos
+Der Endkunde kann die Einhaltung der Kühlkette überprüfen, indem er den QR-Code einscannt.
