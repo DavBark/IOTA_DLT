@@ -1,5 +1,5 @@
 # ETS2021 | Gruppenmitglieder: David Barkmeyer, Luca Görke, Leo Drees, Matthias Grafe, Pascal Hartmann und Daniel Winner | 17.01.2023 
-# Bearbeiter: Matthias Görke und Pascal Hartmann
+# Bearbeiter: David Barkmeyer und Leo Drees
 """
 Aufgabenstellung:
     - Gibt es für jede Transportstation jeweils einen Eintrag für das Ein-bzw. Auschecken? 
