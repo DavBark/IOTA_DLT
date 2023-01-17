@@ -12,11 +12,12 @@ Jeder Dönerspieß durchläuft während des Transports verschiedene Stationen in
 
 ## Beispiel:
 Ein beispielhafter Transportweg könnte folgendermaßen aussehen: 
-o  Der Kühltransporter (KT) holt die Ware ab und transportiert sie zum 
-o  lokalen Kühlhaus im Güterverteilzentrum (GVZ) 
-o  Ein Kühltransporter (KT) bringt die Ware in ein  
-o  Güterverteilzentrum (GVZ) in der Nähe des Endkunden 
-o  Ein Kühltransporter (KT) bringt die Ware zum Endkunden.  
+
+- Der Kühltransporter (KT) holt die Ware ab und transportiert sie zum
+- lokalen Kühlhaus im Güterverteilzentrum (GVZ) 
+- Ein Kühltransporter (KT) bringt die Ware in ein  
+- Güterverteilzentrum (GVZ) in der Nähe desEndkunden 
+- Ein Kühltransporter (KT) bringt die Ware zum Endkunden.  
 
 ## Weitere Infos
-Der Endkunde kann die Einhaltung der Kühlkette überprüfen, indem er den QR-Code einscannt.
+Der Endkunde kann die Einhaltung der Kühlkette  berprüfen, indem er den QR-Code einscannt.
