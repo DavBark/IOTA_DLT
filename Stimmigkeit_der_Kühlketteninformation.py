@@ -8,6 +8,7 @@ Aufgabenstellung:
 #---------------| v. 1.0 |---------------#
 import iota_client
 from datetime import datetime
+import time
 import json
 transportIDs = [72359278599178561029675,
                 15668407856331648336231,
@@ -84,12 +85,12 @@ for transportID in transportIDs:
                         
                         if (checkInTimedate-checkOutTimedate).total_seconds()>(maxMinutesOutFridge*60):     # prüfe ob der Auslagerungszeitpunkt einen größeren abstand als gewünscht zur nächsten Einlagerung hat
                             invalidCooling=True
-                            failText[1].append(str(int((checkInTimedate-checkOutTimedate).total_seconds()-maxMinutesOutFridge*60))+'s before '+ str(targetValid['transportstation']))
+                            failText[1].append(str(time.strftime('%H:%M:%S', time.gmtime(int((checkInTimedate-checkOutTimedate).total_seconds()-maxMinutesOutFridge*60))))+' bevor '+ str(targetValid['transportstation']))
 
 
                 else:               # ist der Index gerade aber die direction ist nicht in gibt es einen Fehler bei Ein und Auslagern
                     invalidDirection=True
-                    failText[0].append(str('missing In at '+targetValid['transportstation']))
+                    failText[0].append(str('Fehlendes In bei '+targetValid['transportstation']))
                     count+=1
 
 
@@ -99,7 +100,7 @@ for transportID in transportIDs:
                     
                 else:               # ist der Index ungerade aber die direction ist nicht out gibt es einen Fehler bei Ein und Auslagern
                     invalidDirection=True
-                    failText[0].append(str('missing Out at '+targetValid['transportstation']))
+                    failText[0].append(str('Fehelendes Out bei '+targetValid['transportstation']))
                     count+=1
 
             
@@ -112,6 +113,7 @@ for transportID in transportIDs:
 
         if (lastOutFridge-firstInFridge).total_seconds()>(maxHoursTransportDuration*60*60):     # liegt zwischen dem ersten und letztm Event mehr als gewünscht?
             invalidDuration=True
+            failText[2]=time.strftime('%H:%M:%S', time.gmtime(int((lastOutFridge-firstInFridge).total_seconds()-maxHoursTransportDuration*60*60)))
 
         #if invalidDirection or invalidCooling or invalidDuration:
             #print(target)
@@ -125,14 +127,14 @@ for transportID in transportIDs:
         print("\033[0;32m"+'ID: '+str(transportID)+u' \u2705'+"\033[0;32m")
     else:
         print("\033[1;31m"+'ID: '+str(transportID)+ u' \u274c '+"\033[1;31m",end= '')
+        if invalidDuration:     # fehler durch Überschreitung der gesamt Transportdauer
+            print("\033[1;31m"+' | max 48 Stunden Kühlkette mit '+str(failText[2])+' überschritten'+"\033[1;31m",end='')
+        if invalidCooling:      # fehler durch zulange ohne kühlung zwischen Kühlungen
+            print("\033[1;31m"+' | ohne Kühlung über 10 minuten von '+str(failText[1])[1:-1].replace("'","")+"\033[1;31m",end='')
         if invalidDirection:    # fehler in der Ein und Auslagerungs reihenfolge
             print("\033[1;31m"+' | '+str(failText[0])[1:-1].replace("'","")+"\033[1;31m",end='')
-        if invalidCooling:      # fehler durch zulange ohne kühlung zwischen Kühlungen
-            print("\033[1;31m"+' | no cooling over 10 min for '+str(failText[1])[1:-1].replace("'","")+"\033[1;31m",end='')
-        if invalidDuration:     # fehler durch Überschreitung der gesamt Transportdauer
-            print("\033[1;31m"+' | invalid Duration'+"\033[1;31m",end='')
         if invalidID:           # unbekannte ID
-            print("\033[1;31m"+' | ID not found'+"\033[1;31m",end='')
+            print("\033[1;31m"+' | unbekannte ID'+"\033[1;31m",end='')
         print("\033[1;31m"+' | '+"\033[1;31m")
 
     
