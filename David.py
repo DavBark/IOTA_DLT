@@ -36,23 +36,32 @@ for timeStamp in target:
 #print(timestamps)
 
 timestamps.sort()
-
 #print(timestamps)
-print(timestamps[0],"   |   ", timestamps[-1])
-print(timestamps[0][:10])
-print(timestamps[0][11:])
+erster_tag = timestamps[0][:2]
+erster_monat = timestamps[0][3:5]
+erster_jahr = timestamps[0][6:10]
+erster_stunde = timestamps[0][11:13]
+erster_minute = timestamps[0][14:16]
+erster_sekunde = timestamps[0][17:]
 
-tag = timestamps[0][:2]
-monat = timestamps[0][3:5]
-jahr = timestamps[0][6:10]
 
-print(tag, "|", monat, "|", jahr)
+letzte_tag = timestamps[-1][:2]
+letzte_monat = timestamps[-1][3:5]
+letzte_jahr = timestamps[-1][6:10]
+letzte_stunde = timestamps[-1][11:13]
+letzte_minute = timestamps[-1][14:16]
+letzte_sekunde = timestamps[-1][17:]
 
 from datetime import date
 
-
-dt1 = datetime.datetime(int(jahr),int(monat),int(tag)) 
-dt2 = datetime.datetime(2022,9,6) 
+dt1 = datetime.datetime(int(erster_jahr),int(erster_monat),int(erster_tag),int(erster_stunde),int(erster_minute),int(erster_sekunde)) 
+dt2 = datetime.datetime(int(letzte_jahr),int(letzte_monat),int(letzte_tag),int(letzte_stunde),int(letzte_minute),int(letzte_sekunde))
+print(dt1, " | ", dt2) 
 tdelta = dt2 - dt1 
-print(tdelta) 
-print(type(tdelta)) 
+
+Anzahl_tage = str(tdelta)[:1]
+if Anzahl_tage >= '2':
+    print("Zeit überschritten")
+
+else:
+    print("Zeit eingehalten")
