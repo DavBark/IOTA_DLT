@@ -9,8 +9,6 @@ Aufgabenstellung:
 import iota_client
 from datetime import datetime
 import json
-from termcolor import colored
-
 transportIDs = [72359278599178561029675,
                 15668407856331648336231,
                 73491878556297128760578,
@@ -124,18 +122,18 @@ for transportID in transportIDs:
     # --- Ausgabe des Ergebnisses der Überprüfung
 
     if not invalidDirection and not invalidCooling and not invalidDuration  and not invalidID:   # keine Fehler gefunden
-        print(colored('ID: '+str(transportID)+u' \u2705','green'))
+        print("\033[0;32m"+'ID: '+str(transportID)+u' \u2705'+"\033[0;32m")
     else:
-        print(colored('ID: '+str(transportID)+ u' \u274c ','red'),end= '')
+        print("\033[1;31m"+'ID: '+str(transportID)+ u' \u274c '+"\033[1;31m",end= '')
         if invalidDirection:    # fehler in der Ein und Auslagerungs reihenfolge
-            print(colored(' | '+str(failText[0])[1:-1].replace("'",""),'red'),end='')
+            print("\033[1;31m"+' | '+str(failText[0])[1:-1].replace("'","")+"\033[1;31m",end='')
         if invalidCooling:      # fehler durch zulange ohne kühlung zwischen Kühlungen
-            print(colored(' | no cooling over 10 min for '+str(failText[1])[1:-1].replace("'",""),'red'),end='')
+            print("\033[1;31m"+' | no cooling over 10 min for '+str(failText[1])[1:-1].replace("'","")+"\033[1;31m",end='')
         if invalidDuration:     # fehler durch Überschreitung der gesamt Transportdauer
-            print(colored(' | invalid Duration','red'),end='')
+            print("\033[1;31m"+' | invalid Duration'+"\033[1;31m",end='')
         if invalidID:           # unbekannte ID
-            print(colored(' | ID not found','red'),end='')
-        print(colored(' | ','red'))
+            print("\033[1;31m"+' | ID not found'+"\033[1;31m",end='')
+        print("\033[1;31m"+' | '+"\033[1;31m")
 
     
     
