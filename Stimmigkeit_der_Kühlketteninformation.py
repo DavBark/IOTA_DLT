@@ -41,6 +41,8 @@ client = iota_client.Client(
 
 messages = client.find_messages(indexation_keys=['Food Solution Hildesheim'])   # indexation = der Message search key
 
+def bydatetime(elem):           # Funktion für die Sortierung nach timestamp
+    return elem['timestamp']
 # ---- Alle IDs durcharbeiten
 
 for transportID in transportIDs:
@@ -65,8 +67,7 @@ for transportID in transportIDs:
             target.append(messageJSON)
 
     # sortiere die Datensätze nach Zeit
-    def bydatetime(elem):           # Funktion für die Sortierung nach timestamp
-        return elem['timestamp']
+    
     target.sort(key=bydatetime)     # Sortiere nach der Funktion bydatetime
 
 
