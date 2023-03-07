@@ -1,0 +1,44 @@
+{'message_id': '797f4cebf0974ac9b7d2dd4e82aae5d7496d74a9bf412bc60e73809f7e385c65', 
+'network_id': 6514788332515804015, 
+'parents': ['1cd3fe78793423dda2b276bdb11bdf48576388226b9021aaab91c1d0ce087ae9', 
+'39bfdbf7ae85d7ff21c6a8feb8443262466bb1f12ef3d1246a16788e1827ee6e', 
+'d01e8d03cbf6c4ed6eea2064ab203c483b5eebea4de4de01d5b133f3c32177eb', 
+'d093fd2b911608da22c0b36bdfe67356104f8482af63671b8e8cd5fbac5eadca'], 
+
+'payload': {'transaction': [
+    {'essence': 
+    {'inputs': [
+        {'transaction_id': '14f4210519945239363827a9cd7f07665bb166c97ea37f30f97bbbf16c5ff978', 'index': 1}, 
+        {'transaction_id': 'e76c327e863174d8642dfdb6b7abd2266a6b6dd766fcecf955b9f0b3045a767f', 'index': 0}], 
+
+'outputs': [
+    {'signature_locked_single': 
+        {'address': 'atoi1qz7qm2xt59fa6yh949xucynm4vu24clgh7x7j93une5k39x2h20pw7j4vvg',
+        'amount': 10000000}, 
+    'signature_locked_dust_allowance': None}
+    ], 
+
+  'payload': None}, 
+
+  'unlock_blocks': [
+    {'signature': 
+        {'public_key': [38, 242, 246, 254, 149, 14, 15, 28, 63, 153,
+             200, 23, 17, 193, 0, 112, 120, 245, 253, 80, 110, 132, 89, 21, 
+            74, 151, 64, 75, 146, 228, 170, 248], 
+
+        'signature': [0, 51, 252, 64, 87, 143, 87, 74, 136, 183, 171, 243, 251,
+             125, 205, 237, 101, 98, 12, 67, 229, 62, 158, 45, 173, 84, 217,
+              225, 171, 120, 153, 192, 64, 251, 193, 195, 57, 248, 48, 106, 
+              220, 82, 142, 241, 39, 175, 2, 161, 9, 60, 246, 241, 160, 235, 
+              145, 250, 178, 107, 56, 229, 81, 87, 64, 14]}, 
+    'reference': None}, 
+    {'signature': None, 'reference': 0}
+    ]
+    }
+],
+
+'milestone': None, 
+'indexation': None, 
+'receipt': None, 
+'treasury_transaction': None}, 
+'nonce': 11529215046068492748}
