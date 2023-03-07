@@ -13,9 +13,11 @@ Folgende Kriterien sind für die Einhaltung der Kühlkette zu überprüfen:
          Überschreitet die Gesamttransportdauer 48 h?
 """
 #---------------| v. 2.1 |---------------#
-
 import iota_client
 from datetime import datetime
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+import hashlib
 import time
 import json
 
@@ -44,6 +46,9 @@ transportIDs = [72359278599178561029675,
 
 maxMinutesOutFridge=10
 maxHoursTransportDuration=48
+tempKuehlhausMax=4.0
+tempKuehlhausMin=2.0
+tempkuehlhausTiming=15
 
 richtig=0
 unbekannt=0
@@ -56,7 +61,7 @@ timestamp=timestamp.strftime('%d-%m-%y_%H-%M-%S')       # Zeitstempel für Erste
 logDat = open(str('log_'+timestamp+'.csv'),'x')    # wird im Projektordner abgespeichert
 
     # Titelzeile für CSV Tabelle
-logDat.writelines('ID,i.O.,Unbekannte ID,48h gesamt Lieferzeit überschritten,10 min ohne Kühlung überschritten,Reihenfolge Problem\n')
+logDat.writelines('ID,i.O.,Unbekannte ID,48h gesamt Lieferzeit überschritten,10 min ohne Kühlung überschritten,Reihenfolge Problem,Kühltemperatur fehlerhaft\n')
 
 client = iota_client.Client(
     nodes_name_password= [['https://api.lb-0.h.chrysalis-devnet.iota.cafe']])
@@ -65,8 +70,8 @@ client = iota_client.Client(
 
 print('\nDatensätze werden gesucht....',end='\n\n')
 
-messages = client.find_messages(indexation_keys=['Food Solution Hildesheim'])   # indexation = der Message search key
-
+messages = client.find_messages(indexation_keys=['Food Solution Hildesheim encrypted'])   # indexation = der Message search key
+messageDecrypted=[]
 
 print(str(len(messages))+' Datensätze gefunden', end='\n\n')
 
@@ -77,29 +82,176 @@ def bydatetime(elem):           # Funktion für die Sortierung nach timestamp
 def byDirection(elem):           # Funktion für die Sortierung nach direction
     return elem['direction']
 
+def decryptTangle():
+    '''Verschlüsselte Tangles entschlüsseln'''
+    key = b'mysecretpassword'
+    iv = b'passwort-salzen!'
+
+    for messageDecrypt in messages:
+        message=bytes(messageDecrypt['payload']['indexation'][0]['data'])
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        dataDecrypted = unpad(cipher.decrypt(message), AES.block_size)
+        dataDecrypted=dataDecrypted.decode("utf8")
+        messageJSON=json.loads(dataDecrypted)
+        messageDecrypted.append(messageJSON)
+
+
+def kuehltemp(kuehlhaus,checkInTime,checkOutTime):
+    '''
+    Prüfen ob in dem kuehlhaus(str) zwischen checkInTime(timetuple) und checkOutTime(timetuble) die Kühltemperatur die Grenzen nicht verlassen hat
+
+    return(Liste) mit Fehlertexten
+    '''
+    target=[]
+    failtextTemp=[]
+    messages = client.find_messages(indexation_keys=[kuehlhaus])
+    for messageRead in messages:
+        message=messageRead['payload']['indexation'][0]['data']
+        messageUTF8 = ''.join(chr(val) for val in message)
+        messageJSON=json.loads(messageUTF8)
+        target.append(messageJSON)
+    target.sort(key=bydatetime)
+    for targetTemp in target:
+        targetTempTimestamp=datetime.strptime(targetTemp['timestamp'],'%d.%m.%Y %H:%M:%S')
+        if (targetTempTimestamp-checkInTimedate).total_seconds()>=tempkuehlhausTiming*60-1 and (targetTempTimestamp-checkOutTimedate).total_seconds()<=tempkuehlhausTiming*60+1:
+            if targetTemp['temperature']<tempKuehlhausMin or targetTemp['temperature']>tempKuehlhausMax:
+                failtextTemp.append(str(str(targetTemp['temperature'])+u'\xb0''C um '+str(targetTempTimestamp.strftime('%H:%M:%S'))+' bei '+kuehlhaus))
+    return failtextTemp
+
+
+def checkMoney(DEBUG=False):
+    '''Prüfen wieviel Geld auf den Konten ist
+    DEBUG=Bool / wenn true wird im Terminal Debug ausgegeben'''
+    LOGISTIK_IOTA_SEED_SECRET = "71ba735e4957cf56d2c498e8a06e3ed534b022529220c90403b0a52ed5d6179a"  
+    FOODSOLUTION_SEED_SECRET = "b397d3b1e214e20c247daa6fd9cb0ab0a1d9dc76d73babe05eb7d6b28c8fc2e3"
+
+    # Client-Objekt erzeugen
+    client = iota_client.Client()
+    # Kontostand für die Seeds abfragen
+    LOGISTIK_balance = client.get_balance(seed=LOGISTIK_IOTA_SEED_SECRET, account_index=0,
+    initial_address_index=0) / 1000000
+    FOODSOLUTION_balance = client.get_balance(seed=FOODSOLUTION_SEED_SECRET, account_index=0,
+    initial_address_index=0) / 1000000
+    # Ausgabe
+    if DEBUG:
+        print("Debug")
+        print('----------------------------------------------------------------------------------')
+        print("Kontostand Logistikunternhemen: ", LOGISTIK_balance, " MIOTA")
+        print("Kontostand FoodSolution GmbH: ", FOODSOLUTION_balance, " MIOTA")
+        print('----------------------------------------------------------------------------------') 
+
+    return [FOODSOLUTION_balance, LOGISTIK_balance]
+
+
+def sendMoneyback(DEBUG=False):
+    '''
+    sendet geld wieder zurück aufs Logistik Konto
+    DEBUG=Bool / wenn true wird im Terminal Debug ausgegeben
+    '''
+    kontostand_FS = int(checkMoney(False)[0]*1000000)
+    print("Zurück zum Absender")
+    if kontostand_FS > 0:
+        try:
+            #Generierte Seed-Adressen 
+            FOODSOLUTION_SEED_SECRET = "b397d3b1e214e20c247daa6fd9cb0ab0a1d9dc76d73babe05eb7d6b28c8fc2e3"
+
+            LOGISTIK_Adresse = [('atoi1qqr58tqg2xhn4knn6vdf4743j9dvww66ajxz78ku3745ynvenmsgj0hzt27', False), 
+            ('atoi1qryd0a66p26qr5t3vlr5xeuw9znxjjld3tfm2k2gce9vn8xuvjaqza3nw28', True)]
+            
+            # Client-Objekt erzeugen
+            client = iota_client.Client()
+            # Überweisung druchführen
+            message = client.message(
+                seed=FOODSOLUTION_SEED_SECRET,
+                outputs=[
+                    {
+                    'address': LOGISTIK_Adresse[0][0],
+                    'amount': kontostand_FS
+                    }
+                    ]
+                )
+
+            if DEBUG:
+                # Ausgabe
+                print("Debug")
+                print ('----------------------------------------------------------------------------------')
+                print(message)
+                print ('----------------------------------------------------------------------------------') 
+            print("Geld Überwiesen")
+
+        except:
+            print("Fehler beim Ausführen")
+    else:
+        print("Kein Betrag auf Food Solution Konto vohanden")
+
+
+def sendMoney(Betrag, DEBUG=False):
+    '''Sende Geld von Logistikunternehmen nach Foodsolution 
+    Überprüfen, ob genügend geld auf dem Konto LogistikUnternhemen ist
+    Betrag=Int / wieviel überwiesen werden soll
+    DEBUG=Bool / wenn true wird im Terminal Debug ausgegeben'''
+    kontostand_LU = int(checkMoney(False)[1]*1000000)
+
+    print(f"Betrag von {Betrag} MIOTA wird dem Food Solution Konto überwiesen")
+    if kontostand_LU >= Betrag:
+
+        try:
+            #Generierte Seed-Adressen
+            LOGISTIK_IOTA_SEED_SECRET = "71ba735e4957cf56d2c498e8a06e3ed534b022529220c90403b0a52ed5d6179a"  
+            # IOTA-Adresse von Food Solution
+            FOODSOLUTION_Adresse = [('atoi1qq8kky79rcjm6ck70d39t0xnfltzypk43869vslh22crmd2pjkhzv4rx663', False),
+            ('atoi1qrp5pnxf0wahme0m6whru2385lxjuw9wu49e5kymymg990x9l4j5yrqkjzt', True)]
+
+            # Client-Objekt erzeugen
+            client = iota_client.Client()
+            # Überweisung druchführen
+            message = client.message(
+                seed=LOGISTIK_IOTA_SEED_SECRET,
+                outputs=[
+                    {
+                    'address': FOODSOLUTION_Adresse[0][0],
+                    'amount': Betrag*1000000
+                    } 
+                ]
+            )
+
+            if DEBUG:
+                # Ausgabe
+                print("Debug")
+                print ('----------------------------------------------------------------------------------')
+                print(message)
+                print ('----------------------------------------------------------------------------------') 
+            print("Geld Überwiesen")
+
+        except:
+            print("Fehler beim Ausführen")
+    else:
+        print("Nicht genügend Geld auf dem Logistik Konto")
+
+sendMoneyback()     # Empfangenes Geld zurück senden um wieder überweisen zu können
+
+decryptTangle()     # T
 # ---- Alle IDs durcharbeiten
 
 for transportID in transportIDs:
 
     # reset/set vin Parametern für jede neue ID
     target=[]
-    failText=[[],[],[]]
+    failText=[[],[],[],[]]
     invalidDirection=False
     invalidCooling=False
     invalidDuration=False
     invalidID=False
+    invalidCoolingTemp=False
     count = 0
     checkOutTimedate=0
     checkInTimedate=0
     letztestation=''
 
     # durchsuche alle Datensätze und füge die Datensätzte mit der benötigten ID in die target Liste ein
-    for messageRead in messages:
-        message=messageRead['payload']['indexation'][0]['data']
-        messageUTF8 = ''.join(chr(val) for val in message)
-        messageJSON=json.loads(messageUTF8)
-        if int(messageJSON['transportid'])==transportID:
-            target.append(messageJSON)
+    for messageRead in messageDecrypted:
+        if int(messageRead['transportid'])==transportID:
+            target.append(messageRead)
 
     # sortiere die Datensätze nach Zeit
     target.sort(key=byDirection,reverse=True)   # Sortiere nach der Direction
@@ -112,10 +264,11 @@ for transportID in transportIDs:
             if count%2==0:          # Der ein aund Ausgang aus kühlungen ist abwechselnd und fängt mit Eingängen an
                 if targetValid['direction']=='in':  # Dadurch muss bei geradem Index die direction in sein
                     letztestation=targetValid['transportstation']
+                    checkInTimedate=datetime.strptime(targetValid['timestamp'],'%d.%m.%Y %H:%M:%S')     # formatiere Timestamp aus datensatz zu einem Zeitpunkt
+                    
                     if checkOutTimedate !=0:        # hat es schon ein Zeitpunkt für die letzte Auslagerung gegeben?
 
                                                         # timestamp vom Datensatz, Formatierung des Datensatzes
-                        checkInTimedate=datetime.strptime(targetValid['timestamp'],'%d.%m.%Y %H:%M:%S')     # formatiere Timestamp aus datensatz zu einem Zeitpunkt
                         
                         if (checkInTimedate-checkOutTimedate).total_seconds()>(maxMinutesOutFridge*60):     # prüfe ob der Auslagerungszeitpunkt einen größeren abstand als gewünscht zur nächsten Einlagerung hat
                             invalidCooling=True
@@ -132,6 +285,17 @@ for transportID in transportIDs:
                 if targetValid['direction']=='out':
                     if str(letztestation)==str(targetValid['transportstation']):
                         checkOutTimedate=datetime.strptime(targetValid['timestamp'],'%d.%m.%Y %H:%M:%S')    # letzten Auslagerungszeitpunkt überschreiben
+
+                        #print(kuehltemp(letztestation,checkInTimedate,checkOutTimedate))
+                        failTextTemp = kuehltemp(letztestation,checkInTimedate,checkOutTimedate)
+                        if failTextTemp!=[]:
+                            failText[3].append(failTextTemp)
+                            if not invalidCoolingTemp:
+                                invalidCoolingTemp=True
+                        
+
+                        
+
                     else:
                         failText[0].append(str('Fehlendes Out bei '+letztestation))
                         failText[0].append(str('Fehlendes In bei '+targetValid['transportstation']))
@@ -162,7 +326,7 @@ for transportID in transportIDs:
 
     # --- Ausgabe des Ergebnisses der Überprüfung
 
-    if not invalidDirection and not invalidCooling and not invalidDuration  and not invalidID:   # keine Fehler gefunden
+    if not invalidDirection and not invalidCooling and not invalidDuration  and not invalidID and not invalidCoolingTemp:   # keine Fehler gefunden
         logDat.writelines(str(transportID)+',OK'+"\n")
         print("\033[0;32m"+'ID: '+str(transportID)+' OK')
         richtig+=1
@@ -189,8 +353,14 @@ for transportID in transportIDs:
             logDat.writelines(',')
 
         if invalidDirection:    # fehler in der Ein und Auslagerungs reihenfolge
-            logDat.writelines(','+str(str(failText[0])[1:-1].replace("'","")+'\n').replace(',',' |'))
+            logDat.writelines(','+str(str(failText[0])[1:-1].replace("'","")).replace(',',' |'))
             print("\033[0;31m"+' | '+str(failText[0])[1:-1].replace("'",""),end='')
+        else:
+            logDat.writelines(',')
+
+        if invalidCoolingTemp:
+            logDat.writelines(','+str(str(failText[3])[2:-2].replace("'","")+'\n').replace(',',' |'))
+            print("\033[0;31m"+' | '+str(failText[3])[2:-2].replace("'",""),end='')
         else:
             logDat.writelines(',\n')
 
@@ -200,6 +370,7 @@ for transportID in transportIDs:
 
 logDat.close()
 print('\n\033[0;32mIn Ordnung: ' + str(richtig)+'\033[0;33m Unbekannt: '+str(unbekannt)+'\033[0;31m Fehlerhaft: '+ str(falsch))
+sendMoney(falsch)
 
     
     
