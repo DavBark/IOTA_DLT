@@ -66,7 +66,6 @@ def checkMoney(DEBUG):
 
     return [FOODSOLUTION_balance, LOGISTIK_balance]
 
-
 def sendMoneyback(DEBUG): 
  #Sende alles Geld zurück (test Anwendung) 
     kontostand_FS = int(checkMoney(False)[0]*1000000)
@@ -105,8 +104,7 @@ def sendMoneyback(DEBUG):
     else:
         print("Kein Betrag auf Food Solution Konto vohanden")
 
-
-def sendMoney(Betrag, DEBUG):
+def sendMoney(Betrag, DEBUG): 
     #Sende Geld von Logistikunternehmen nach Foodsolution 
     # Überprüfen, ob genügend geld auf dem Konto LogistikUnternhemen ist
     kontostand_LU = int(checkMoney(False)[1]*1000000)
@@ -156,6 +154,6 @@ sendMoney(6, False)
 
 
 print()
-sleep(7)
+sleep(20)
 checkMoney(True)
 
